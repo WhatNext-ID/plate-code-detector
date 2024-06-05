@@ -1,6 +1,8 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type MStatusKendaraan struct {
 	IdStatusKendaraan uuid.UUID `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id_status_kendaraan"`

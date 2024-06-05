@@ -1,7 +1,8 @@
 package router
 
 import (
-	"server/controller"
+	"server/controllers"
+	"server/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,11 +10,18 @@ import (
 func StartApp() *gin.Engine {
 	r := gin.Default()
 
+	userAdmin := r.Group("/user")
+	{
+		userAdmin.POST("/register", controllers.AdminRegister)
+		userAdmin.POST("/login", controllers.AdminLogin)
+	}
+
 	statusKendaraan := r.Group("/status-kendaraan")
 	{
-		statusKendaraan.POST("/", controller.PostStatusKendaraan)
-		statusKendaraan.PATCH("/:id", controller.UpdateStatusKendaraan)
-		statusKendaraan.GET("/", controller.GetAllStatusKendaraan)
+		statusKendaraan.GET("/", controllers.GetAllStatusKendaraan)
+		statusKendaraan.Use(middleware.Auth())
+		statusKendaraan.POST("/", controllers.PostStatusKendaraan)
+		statusKendaraan.PATCH("/:id", controllers.UpdateStatusKendaraan)
 	}
 
 	return r
