@@ -24,5 +24,10 @@ func StartApp() *gin.Engine {
 		statusKendaraan.PATCH("/:id", controllers.UpdateStatusKendaraan)
 	}
 
+	kodeWilayah := r.Group("/kode-wilayah")
+	{
+		kodeWilayah.POST("/", controllers.PostKodeWilayah)
+	}
+
 	return r
 }
