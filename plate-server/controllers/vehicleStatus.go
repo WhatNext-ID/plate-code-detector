@@ -41,14 +41,17 @@ func PostStatusKendaraan(ctx *gin.Context) {
 func UpdateStatusKendaraan(ctx *gin.Context) {
 	db := database.GetDB()
 	Admin := ctx.MustGet("userAdmin").(jwt.MapClaims)
-	var VehicleStatus = models.MStatusKendaraan{}
-	var UpdateVehicleStatus = models.MStatusKendaraan{}
+	var (
+		VehicleStatus       models.MStatusKendaraan
+		UpdateVehicleStatus models.MStatusKendaraan
+		User                models.MAdmin
+	)
 	id := ctx.Param("id")
 
 	ctx.ShouldBindJSON(&UpdateVehicleStatus)
 
 	if err := crdbgorm.ExecuteTx(context.Background(), db, nil, func(tx *gorm.DB) error {
-		if err := tx.Where("id_admin = ?", Admin["id"]).Error; err != nil {
+		if err := tx.Where("id_admin = ?", Admin["id"]).First(User).Error; err != nil {
 			return err
 		}
 
@@ -86,5 +89,7 @@ func GetAllStatusKendaraan(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusAccepted, ListStatusKendaraan)
+	ctx.JSON(http.StatusAccepted, gin.H{
+		"data": ListStatusKendaraan,
+	})
 }

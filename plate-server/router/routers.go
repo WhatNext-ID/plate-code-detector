@@ -10,13 +10,15 @@ import (
 func StartApp() *gin.Engine {
 	r := gin.Default()
 
-	userAdmin := r.Group("/user")
+	api := r.Group("/v1")
+
+	userAdmin := api.Group("/user")
 	{
 		userAdmin.POST("/register", controllers.AdminRegister)
 		userAdmin.POST("/login", controllers.AdminLogin)
 	}
 
-	statusKendaraan := r.Group("/status-kendaraan")
+	statusKendaraan := api.Group("/status-kendaraan")
 	{
 		statusKendaraan.GET("/", controllers.GetAllStatusKendaraan)
 		statusKendaraan.Use(middleware.Auth())
@@ -24,9 +26,13 @@ func StartApp() *gin.Engine {
 		statusKendaraan.PATCH("/:id", controllers.UpdateStatusKendaraan)
 	}
 
-	kodeWilayah := r.Group("/kode-wilayah")
+	kodeWilayah := api.Group("/kode-wilayah")
 	{
+		kodeWilayah.GET("/:id", controllers.GetKodeWilayahById)
+		kodeWilayah.GET("/", controllers.GetAllKodeWilayah)
+		kodeWilayah.Use(middleware.Auth())
 		kodeWilayah.POST("/", controllers.PostKodeWilayah)
+		kodeWilayah.PATCH("/:id", controllers.UpdateKodeWilayah)
 	}
 
 	return r
