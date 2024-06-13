@@ -17,10 +17,8 @@ func PostStatusKendaraan(ctx *gin.Context) {
 	db := database.GetDB()
 	VehicleStatus := models.MStatusKendaraan{}
 
-	newId := uuid.New()
-
 	ctx.ShouldBindJSON(&VehicleStatus)
-
+	newId := uuid.New()
 	VehicleStatus.IdStatusKendaraan = newId
 
 	if err := db.Create(&VehicleStatus).Error; err != nil {
@@ -51,15 +49,15 @@ func UpdateStatusKendaraan(ctx *gin.Context) {
 	ctx.ShouldBindJSON(&UpdateVehicleStatus)
 
 	if err := crdbgorm.ExecuteTx(context.Background(), db, nil, func(tx *gorm.DB) error {
-		if err := tx.Where("id_admin = ?", Admin["id"]).First(User).Error; err != nil {
+		if err := tx.First(User, "id_admin = ?", Admin["id"]).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Where("id_status_kendaraan = ?", id).First(&VehicleStatus).Error; err != nil {
+		if err := tx.First(&VehicleStatus, "id_status_kendaraan = ?", id).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Where("id_status_kendaraan = ?", VehicleStatus.IdStatusKendaraan).Updates(&UpdateVehicleStatus).Error; err != nil {
+		if err := tx.Model(&VehicleStatus).Where("id_status_kendaraan = ?", VehicleStatus.IdStatusKendaraan).Updates(&UpdateVehicleStatus).Error; err != nil {
 			return err
 		}
 

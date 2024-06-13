@@ -35,5 +35,15 @@ func StartApp() *gin.Engine {
 		kodeWilayah.PATCH("/:id", controllers.UpdateKodeWilayah)
 	}
 
+	kodeRegistrasi := api.Group("/kode-registrasi")
+	{
+		kodeRegistrasi.POST("/", controllers.PostKodeRegister)
+	}
+
+	checkCode := api.Group("/cek-kode")
+	{
+		checkCode.POST("/", controllers.CheckCode)
+	}
+
 	return r
 }

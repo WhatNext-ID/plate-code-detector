@@ -17,12 +17,12 @@ type MAdmin struct {
 	GormModel
 }
 
-func (u *MAdmin) BeforeCreate(tx *gorm.DB) (err error) {
-	if _, err := govalidator.ValidateStruct(u); err != nil {
+func (a *MAdmin) BeforeCreate(tx *gorm.DB) (err error) {
+	if _, err := govalidator.ValidateStruct(a); err != nil {
 		return fmt.Errorf("%w", err)
 	}
 
-	u.SandiAdmin = helpers.HashPass(u.SandiAdmin)
-	fmt.Println(u.SandiAdmin)
+	a.SandiAdmin = helpers.HashPass(a.SandiAdmin)
+	fmt.Println(a.SandiAdmin)
 	return nil
 }

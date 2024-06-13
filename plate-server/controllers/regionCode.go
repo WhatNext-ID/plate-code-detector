@@ -18,9 +18,7 @@ func PostKodeWilayah(ctx *gin.Context) {
 	KodeWilayah := models.MKodeWilayah{}
 
 	ctx.ShouldBindJSON(&KodeWilayah)
-
 	newId := uuid.New()
-
 	KodeWilayah.IdKodeWilayah = newId
 
 	if err := db.Create(&KodeWilayah).Error; err != nil {
@@ -32,10 +30,9 @@ func PostKodeWilayah(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"message":             "Kode Wilayah Berhasil Ditambahkan",
-		"kodeWilayah":         KodeWilayah.KodeWilayah,
-		"letakKodeRegistrasi": KodeWilayah.LetakKodeRegistrasi,
-		"keterangan":          KodeWilayah.Keterangan,
+		"message":     "Kode Wilayah Berhasil Ditambahkan",
+		"kodeWilayah": KodeWilayah.KodeWilayah,
+		"keterangan":  KodeWilayah.Keterangan,
 	})
 }
 
@@ -52,15 +49,15 @@ func UpdateKodeWilayah(ctx *gin.Context) {
 	ctx.ShouldBindJSON((&UpdateKodeWilayah))
 
 	if err := crdbgorm.ExecuteTx(context.Background(), db, nil, func(tx *gorm.DB) error {
-		if err := tx.Where("id_admin = ?", Admin["id"]).First(&User).Error; err != nil {
+		if err := tx.First(&User, "id_admin = ?", Admin["id"]).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Where("id_kode_wilayah = ?", id).First(&KodeWilayah).Error; err != nil {
+		if err := tx.First(&KodeWilayah, "id_kode_wilayah = ?", id).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Where("id_kode_wilayah = ?", KodeWilayah.IdKodeWilayah).Updates(&UpdateKodeWilayah).Error; err != nil {
+		if err := tx.Model(&KodeWilayah).Where("id_kode_wilayah = ?", KodeWilayah.IdKodeWilayah).Updates(&UpdateKodeWilayah).Error; err != nil {
 			return err
 		}
 
@@ -80,9 +77,12 @@ func UpdateKodeWilayah(ctx *gin.Context) {
 
 func GetAllKodeWilayah(ctx *gin.Context) {
 	db := database.GetDB()
-	var ListKodeWilayah []models.MKodeWilayah
+	var (
+		KodeWilayah []models.MKodeWilayah
+		result      []gin.H
+	)
 
-	if err := db.Find(&ListKodeWilayah).Error; err != nil {
+	if err := db.Find(&KodeWilayah).Error; err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
 			"message": err.Error(),
@@ -90,8 +90,16 @@ func GetAllKodeWilayah(ctx *gin.Context) {
 		return
 	}
 
+	for _, kw := range KodeWilayah {
+		result = append(result, gin.H{
+			"id":         kw.IdKodeWilayah,
+			"kode":       kw.KodeWilayah,
+			"keterangan": kw.Keterangan,
+		})
+	}
+
 	ctx.JSON(http.StatusAccepted, gin.H{
-		"data": ListKodeWilayah,
+		"data": result,
 	})
 }
 
@@ -100,7 +108,7 @@ func GetKodeWilayahById(ctx *gin.Context) {
 	KodeWilayah := models.MKodeWilayah{}
 	id := ctx.Param("id")
 
-	if err := db.Where("id_kdoe_wilayah = ?", id).First(&KodeWilayah).Error; err != nil {
+	if err := db.Where("id_kode_wilayah = ?", id).First(&KodeWilayah).Error; err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
 			"message": err.Error(),
@@ -109,8 +117,7 @@ func GetKodeWilayahById(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusAccepted, gin.H{
-		"kodeWilayah":         KodeWilayah.KodeWilayah,
-		"letakKodeRegistrasi": KodeWilayah.LetakKodeRegistrasi,
-		"keterangan":          KodeWilayah.Keterangan,
+		"kodeWilayah": KodeWilayah.KodeWilayah,
+		"keterangan":  KodeWilayah.Keterangan,
 	})
 }

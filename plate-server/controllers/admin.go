@@ -14,10 +14,8 @@ func AdminRegister(ctx *gin.Context) {
 	db := database.GetDB()
 	UserAdmin := models.MAdmin{}
 
-	newId := uuid.New()
-
 	ctx.ShouldBindJSON(&UserAdmin)
-
+	newId := uuid.New()
 	UserAdmin.IdAdmin = newId
 
 	if err := db.Create(&UserAdmin).Error; err != nil {
