@@ -30,7 +30,7 @@ func StartDB() {
 	}
 
 	fmt.Println("Berhasil tersambung ke db")
-	db.AutoMigrate(models.MStatusKendaraan{}, models.MAdmin{}, models.MKodeWilayah{}, models.MKodeRegistrasi{})
+	db.AutoMigrate(models.MStatusKendaraan{}, models.MAdmin{}, models.MKodeWilayah{}, models.MKodeRegistrasi{}, models.MKodeRegistrasiKhusu{})
 }
 
 func GetDB() *gorm.DB {

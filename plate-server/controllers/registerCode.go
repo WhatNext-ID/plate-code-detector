@@ -13,11 +13,13 @@ import (
 )
 
 type KodeRegisterPost struct {
-	KodeRegistrasi  string  `json:"kode_registrasi"`
+	KodeAwal        *string `json:"kode_awal"`
+	KodeAkhir       *string `json:"kode_akhir"`
+	KodeAlias       *string `json:"kode_alias"`
 	WilayahHukum    *string `json:"wilayah_hukum"`
 	Keterangan      string  `json:"keterangan"`
 	KodeWilayah     string  `json:"kode_wilayah"`
-	StatusKendaraan *string `json:"status_kendaraan"`
+	StatusKendaraan string  `json:"status_kendaraan"`
 }
 
 func PostKodeRegister(ctx *gin.Context) {
@@ -39,8 +41,18 @@ func PostKodeRegister(ctx *gin.Context) {
 
 	newId := uuid.New()
 	KodeRegistrasi.IdKodeRegistrasi = newId
-	KodeRegistrasi.KodeRegistrasi = Post.KodeRegistrasi
-	KodeRegistrasi.Keterangan = Post.Keterangan
+
+	if Post.KodeAwal != nil {
+		KodeRegistrasi.KodeAwal = *Post.KodeAwal
+	}
+
+	if Post.KodeAkhir != nil {
+		KodeRegistrasi.KodeAkhir = *Post.KodeAkhir
+	}
+
+	if Post.KodeAlias != nil {
+		KodeRegistrasi.KodeAlias = *Post.KodeAlias
+	}
 
 	if Post.WilayahHukum != nil {
 		KodeRegistrasi.WilayahHukum = *Post.WilayahHukum
@@ -55,14 +67,10 @@ func PostKodeRegister(ctx *gin.Context) {
 			return err
 		}
 
-		if err := tx.First(&StatusKendaraan, "status_kendaraan = ?", &Post.StatusKendaraan).Error; err != nil {
-			return err
-		}
-
 		KodeRegistrasi.IdStatusKendaraan = StatusKendaraan.IdStatusKendaraan
 		KodeRegistrasi.IdKodeWilayah = KodeWilayah.IdKodeWilayah
 
-		if err := tx.Create(&KodeRegistrasi).Error; err != nil {
+		if err := tx.Model(&KodeRegistrasi).Create(&KodeRegistrasi).Error; err != nil {
 			return err
 		}
 
@@ -76,9 +84,11 @@ func PostKodeRegister(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, gin.H{
-		"message":        "Kode Wilayah Berhasil Ditambahkan",
-		"kodeRegistrasi": KodeRegistrasi.KodeRegistrasi,
-		"keterangan":     KodeRegistrasi.Keterangan,
-		"wilayahHukum":   KodeRegistrasi.WilayahHukum,
+		"message":      "Kode Wilayah Berhasil Ditambahkan",
+		"kodeAwal":     KodeRegistrasi.KodeAwal,
+		"kodeAkhir":    KodeRegistrasi.KodeAkhir,
+		"kodeKhusus":   KodeRegistrasi.KodeAlias,
+		"keterangan":   KodeWilayah.Keterangan,
+		"wilayahHukum": KodeRegistrasi.WilayahHukum,
 	})
 }

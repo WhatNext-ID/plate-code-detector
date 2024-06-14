@@ -40,6 +40,11 @@ func StartApp() *gin.Engine {
 		kodeRegistrasi.POST("/", controllers.PostKodeRegister)
 	}
 
+	kodeRegistrasiKhusus := api.Group("/kode-khusus")
+	{
+		kodeRegistrasiKhusus.POST("/", controllers.PostSpecialRegisterCode)
+	}
+
 	checkCode := api.Group("/cek-kode")
 	{
 		checkCode.POST("/", controllers.CheckCode)
