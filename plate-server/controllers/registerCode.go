@@ -12,20 +12,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type KodeRegisterPost struct {
-	KodeAwal        *string `json:"kode_awal"`
-	KodeAkhir       *string `json:"kode_akhir"`
-	KodeAlias       *string `json:"kode_alias"`
-	WilayahHukum    *string `json:"wilayah_hukum"`
-	Keterangan      string  `json:"keterangan"`
-	KodeWilayah     string  `json:"kode_wilayah"`
-	StatusKendaraan string  `json:"status_kendaraan"`
-}
-
 func PostKodeRegister(ctx *gin.Context) {
 	db := database.GetDB()
 	var (
-		Post            KodeRegisterPost
+		Post            models.KodeRegisterPost
 		StatusKendaraan models.MStatusKendaraan
 		KodeRegistrasi  models.MKodeRegistrasi
 		KodeWilayah     models.MKodeWilayah
