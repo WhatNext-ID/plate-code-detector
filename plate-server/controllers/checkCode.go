@@ -37,7 +37,11 @@ func handleKendaraanDinas(ctx *gin.Context, CodeData models.Code) {
 	}
 
 	ctx.JSON(http.StatusAccepted, gin.H{
-		"kodeKhusus": result,
+		"kodeRegistrasi":  result.KodeRegistrasi,
+		"wilayahHukum":    "Kendaraan ini berada dibawah wilayah kepolisian " + result.WilayahHukum,
+		"namaProvinsi":    result.NamaProvinsi,
+		"statusKendaraan": result.StatusKendaraan,
+		"keteranganKode":  result.Keterangan,
 	})
 }
 
@@ -82,7 +86,7 @@ func handleKendaraanKhusus(ctx *gin.Context, CodeData models.Code) {
 		Joins("JOIN m_kode_wilayahs ON m_kode_registrasis.id_kode_wilayah = m_kode_wilayahs.id_kode_wilayah").
 		Joins("JOIN m_status_kendaraans ON m_kode_registrasis.id_status_kendaraan = m_status_kendaraans.id_status_kendaraan").
 		Where("m_kode_wilayahs.id_kode_wilayah = ? AND (m_kode_registrasis.kode_awal = ? OR m_kode_registrasis.kode_akhir = ? OR m_kode_registrasis.kode_alias = ? OR m_kode_registrasis.kode_alias = ?)",
-			KodeWilayah.IdKodeWilayah, kodeToUse, kodeToUse, CodeData.KodeAliasAwal, CodeData.KodeAliasAkhir).
+			KodeWilayah.IdKodeWilayah, kodeToUse, kodeToUse, CodeData.KodeAwal, CodeData.KodeAkhir).
 		Take(&result).Error; err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
@@ -92,8 +96,14 @@ func handleKendaraanKhusus(ctx *gin.Context, CodeData models.Code) {
 	}
 
 	ctx.JSON(http.StatusAccepted, gin.H{
-		"kodeRegistrasi": result,
-		"kodeKhusus":     KodeKhusus,
+		"kodeRegistrasi":  CodeData.KodeRegistrasi,
+		"wilayahHukum":    "Kendaraan ini berada dibawah wilayah kepolisian " + KodeKhusus.WilayahHukum,
+		"kodeAwal":        result.KodeAwal,
+		"kodeAkhir":       result.KodeAkhir,
+		"kodeAlias":       result.KodeAlias,
+		"namaProvinsi":    KodeKhusus.NamaProvinsi,
+		"statusKendaraan": KodeKhusus.StatusKendaraan,
+		"keteranganKode":  KodeKhusus.Keterangan,
 	})
 }
 
@@ -116,8 +126,8 @@ func handleKendaraanPribadi(ctx *gin.Context, CodeData models.Code) {
 		Select("m_kode_registrasis.wilayah_hukum, m_kode_registrasis.kode_awal, m_kode_registrasis.kode_akhir, m_kode_registrasis.kode_alias, m_kode_wilayahs.keterangan as nama_provinsi, m_status_kendaraans.status_kendaraan, m_status_kendaraans.keterangan").
 		Joins("JOIN m_kode_wilayahs ON m_kode_registrasis.id_kode_wilayah = m_kode_wilayahs.id_kode_wilayah").
 		Joins("JOIN m_status_kendaraans ON m_kode_registrasis.id_status_kendaraan = m_status_kendaraans.id_status_kendaraan").
-		Where("m_kode_wilayahs.id_kode_wilayah = ? AND m_status_kendaraans.status_kendaraan = ? AND (m_kode_registrasis.kode_awal = ? OR m_kode_registrasis.kode_akhir = ? OR m_kode_registrasis.kode_alias = ? OR m_kode_registrasis.kode_alias = ?)",
-			KodeWilayah.IdKodeWilayah, CodeData.StatusKendaraan, CodeData.KodeAwal, CodeData.KodeAkhir, CodeData.KodeAliasAwal, CodeData.KodeAliasAkhir).
+		Where("m_kode_wilayahs.id_kode_wilayah = ? AND m_status_kendaraans.status_kendaraan = ? AND (m_kode_registrasis.kode_awal = ? OR m_kode_registrasis.kode_akhir = ? OR m_kode_registrasis.kode_alias = ? OR m_kode_registrasis.kode_alias = ? OR m_kode_registrasis.kode_alias = ?)",
+			KodeWilayah.IdKodeWilayah, CodeData.StatusKendaraan, CodeData.KodeAwal, CodeData.KodeAkhir, CodeData.KodeAwal, CodeData.KodeAkhir, CodeData.KodeRegistrasi).
 		Take(&result).Error; err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
@@ -127,7 +137,14 @@ func handleKendaraanPribadi(ctx *gin.Context, CodeData models.Code) {
 	}
 
 	ctx.JSON(http.StatusAccepted, gin.H{
-		"kodeRegistrasi": result,
+		"kodeRegistrasi":  CodeData.KodeRegistrasi,
+		"wilayahHukum":    "Kendaraan ini berada dibawah wilayah kepolisian " + result.WilayahHukum,
+		"kodeAwal":        result.KodeAwal,
+		"kodeAkhir":       result.KodeAkhir,
+		"kodeAlias":       result.KodeAlias,
+		"namaProvinsi":    result.NamaProvinsi,
+		"statusKendaraan": result.StatusKendaraan,
+		"keteranganKode":  result.Keterangan,
 	})
 }
 

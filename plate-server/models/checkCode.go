@@ -4,8 +4,6 @@ type Code struct {
 	KodeWilayah     string  `json:"kode_wilayah"`
 	KodeAwal        string  `json:"kode_awal"`
 	KodeAkhir       string  `json:"kode_akhir"`
-	KodeAliasAwal   string  `json:"kode_alias_awal"`
-	KodeAliasAkhir  string  `json:"kode_alias_akhir"`
 	KodeRegistrasi  string  `json:"kode_registrasi"`
 	WilayahHukum    *string `json:"wilayah_hukum"`
 	StatusKendaraan string  `json:"status_kendaraan"`
