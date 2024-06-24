@@ -17,7 +17,14 @@ func PostKodeWilayah(ctx *gin.Context) {
 	db := database.GetDB()
 	KodeWilayah := models.MKodeWilayah{}
 
-	ctx.ShouldBindJSON(&KodeWilayah)
+	if err := ctx.ShouldBindJSON(&KodeWilayah); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
+
 	newId := uuid.New()
 	KodeWilayah.IdKodeWilayah = newId
 
@@ -37,8 +44,9 @@ func PostKodeWilayah(ctx *gin.Context) {
 }
 
 func UpdateKodeWilayah(ctx *gin.Context) {
-	db := database.GetDB()
 	Admin := ctx.MustGet("userAdmin").(jwt.MapClaims)
+
+	db := database.GetDB()
 	var (
 		KodeWilayah       models.MKodeWilayah
 		UpdateKodeWilayah models.MKodeWilayah
@@ -46,7 +54,13 @@ func UpdateKodeWilayah(ctx *gin.Context) {
 	)
 	id := ctx.Param("id")
 
-	ctx.ShouldBindJSON((&UpdateKodeWilayah))
+	if err := ctx.ShouldBindJSON(&UpdateKodeWilayah); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
 
 	if err := crdbgorm.ExecuteTx(context.Background(), db, nil, func(tx *gorm.DB) error {
 		if err := tx.First(&User, "id_admin = ?", Admin["id"]).Error; err != nil {

@@ -14,7 +14,14 @@ func AdminRegister(ctx *gin.Context) {
 	db := database.GetDB()
 	UserAdmin := models.MAdmin{}
 
-	ctx.ShouldBindJSON(&UserAdmin)
+	if err := ctx.ShouldBindJSON(&UserAdmin); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
+
 	newId := uuid.New()
 	UserAdmin.IdAdmin = newId
 
@@ -38,7 +45,13 @@ func AdminLogin(ctx *gin.Context) {
 	User := models.MAdmin{}
 	password := ""
 
-	ctx.ShouldBindJSON(&User)
+	if err := ctx.ShouldBindJSON(&User); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
 
 	password = User.SandiAdmin
 

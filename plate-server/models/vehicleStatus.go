@@ -10,6 +10,7 @@ type MStatusKendaraan struct {
 	Keterangan        string                 `gorm:"not null" valid:"required~Harap tambahkan keterangan status kendaraan" json:"keterangan"`
 	Registrasi        []MKodeRegistrasi      `gorm:"foreignKey:IdStatusKendaraan;references:IdStatusKendaraan"`
 	RegistrasiKhusus  []MKodeRegistrasiKhusu `gorm:"foreignKey:IdStatusKendaraan;references:IdStatusKendaraan"`
+	NomorKhusus       []MKodeRegistrasiKhusu `gorm:"foreignKey:IdStatusKendaraan;references:IdStatusKendaraan"`
 	IdStatusAktif     int                    `gorm:"default:1" json:"id_status_aktif"`
 	GormModel
 }

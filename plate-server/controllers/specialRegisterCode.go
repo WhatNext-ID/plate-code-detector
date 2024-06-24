@@ -14,7 +14,6 @@ import (
 
 func PostSpecialRegisterCode(ctx *gin.Context) {
 	db := database.GetDB()
-
 	var (
 		Post                 models.KodeRegisterKhususPost
 		StatusKendaraan      models.MStatusKendaraan

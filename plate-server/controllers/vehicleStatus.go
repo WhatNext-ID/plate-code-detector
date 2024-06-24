@@ -17,7 +17,14 @@ func PostStatusKendaraan(ctx *gin.Context) {
 	db := database.GetDB()
 	VehicleStatus := models.MStatusKendaraan{}
 
-	ctx.ShouldBindJSON(&VehicleStatus)
+	if err := ctx.ShouldBindJSON(&VehicleStatus); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
+
 	newId := uuid.New()
 	VehicleStatus.IdStatusKendaraan = newId
 
@@ -46,7 +53,13 @@ func UpdateStatusKendaraan(ctx *gin.Context) {
 	)
 	id := ctx.Param("id")
 
-	ctx.ShouldBindJSON(&UpdateVehicleStatus)
+	if err := ctx.ShouldBindJSON(&UpdateVehicleStatus); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
 
 	if err := crdbgorm.ExecuteTx(context.Background(), db, nil, func(tx *gorm.DB) error {
 		if err := tx.First(User, "id_admin = ?", Admin["id"]).Error; err != nil {
