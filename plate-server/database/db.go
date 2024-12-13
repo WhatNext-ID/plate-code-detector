@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"server/models"
+	platecode "server/models/plate-code"
+	user "server/models/user"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -30,7 +31,29 @@ func StartDB() {
 	}
 
 	fmt.Println("Berhasil tersambung ke db")
-	db.AutoMigrate(models.MStatusKendaraan{}, models.MAdmin{}, models.MKodeWilayah{}, models.MKodeRegistrasi{}, models.MKodeRegistrasiKhusu{}, models.MNomorKhusu{})
+}
+
+func RunMigrations() {
+	if db == nil {
+		StartDB()
+	}
+
+	err := db.AutoMigrate(
+		&user.UserRole{},
+		&user.User{},
+		&platecode.RegiterCodePosition{},
+		&platecode.RegionPlateCode{},
+		&platecode.RegisterPlateCode{},
+		&platecode.VehicleEngine{},
+		&platecode.VehicleType{},
+		&platecode.VehicleCategory{},
+	)
+
+	if err != nil {
+		log.Fatalf("Migration failed: %v", err)
+	}
+
+	fmt.Println("Migrations completed successfully.")
 }
 
 func GetDB() *gorm.DB {
