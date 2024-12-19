@@ -12,42 +12,25 @@ func StartApp() *gin.Engine {
 
 	api := r.Group("/v1")
 
-	userAdmin := api.Group("/user")
+	auth := api.Group("/auth")
 	{
-		userAdmin.POST("/register", controllers.AdminRegister)
-		userAdmin.POST("/login", controllers.AdminLogin)
+		auth.POST("/register", controllers.UserRegister)
+		auth.POST("/login", controllers.UserLogin)
 	}
 
-	statusKendaraan := api.Group("/status-kendaraan")
+	vehicle := api.Group("/vehicle")
 	{
-		statusKendaraan.GET("/", controllers.GetAllStatusKendaraan)
-		statusKendaraan.Use(middleware.Auth())
-		statusKendaraan.POST("/", controllers.PostStatusKendaraan)
-		statusKendaraan.PATCH("/:id", controllers.UpdateStatusKendaraan)
+		vehicle.Use(middleware.Auth())
+		vehicle.POST("/engine", controllers.CreateVehicleEngine)
+		vehicle.POST("/type", controllers.CreateVehicleType)
+		vehicle.POST("/category", controllers.CreateVehicleCategory)
 	}
 
-	kodeWilayah := api.Group("/kode-wilayah")
+	plateCode := api.Group("/plate-code")
 	{
-		kodeWilayah.GET("/:id", controllers.GetKodeWilayahById)
-		kodeWilayah.GET("/", controllers.GetAllKodeWilayah)
-		kodeWilayah.Use(middleware.Auth())
-		kodeWilayah.POST("/", controllers.PostKodeWilayah)
-		kodeWilayah.PATCH("/:id", controllers.UpdateKodeWilayah)
-	}
-
-	kodeRegistrasi := api.Group("/kode-registrasi")
-	{
-		kodeRegistrasi.POST("/", controllers.PostKodeRegister)
-	}
-
-	kodeRegistrasiKhusus := api.Group("/kode-khusus")
-	{
-		kodeRegistrasiKhusus.POST("/", controllers.PostSpecialRegisterCode)
-	}
-
-	checkCode := api.Group("/cek-kode")
-	{
-		checkCode.POST("/", controllers.CheckCode)
+		plateCode.Use(middleware.Auth())
+		plateCode.POST("/region", controllers.CreateRegionCode)
+		plateCode.POST("/register/:region", controllers.CreateRegisterCode)
 	}
 
 	return r
