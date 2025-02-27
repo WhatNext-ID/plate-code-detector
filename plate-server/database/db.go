@@ -41,7 +41,6 @@ func RunMigrations() {
 	err := db.AutoMigrate(
 		&user.UserRole{},
 		&user.User{},
-		&platecode.RegisterCodePosition{},
 		&platecode.RegionPlateCode{},
 		&platecode.RegisterPlateCode{},
 		&platecode.VehicleEngine{},
