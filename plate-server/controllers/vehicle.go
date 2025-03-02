@@ -6,6 +6,8 @@ import (
 	"server/database"
 	platecode "server/models/plate-code"
 	"server/utils"
+	"strings"
+	"time"
 
 	"github.com/cockroachdb/cockroach-go/v2/crdb/crdbgorm"
 	"github.com/gin-gonic/gin"
@@ -25,6 +27,14 @@ type VehicleCategory struct {
 	VehicleType   string   `json:"vehicleType"`
 	VehicleEngine string   `json:"vehicleEngine"`
 	ColorCriteria []string `json:"colorCriteria"`
+}
+
+type VehicleData struct {
+	IdVehicleCategory uuid.UUID                 `json:"idVehicleCat"`
+	VehicleType       string                    `json:"vehicleType"`
+	VehicleEngine     string                    `json:"vehicleEngine"`
+	ColorCriteria     utils.StringArrayResponse `json:"vehicleColorCriteria"`
+	CreatedAt         *time.Time                `json:"createdAt"`
 }
 
 func CreateVehicleType(ctx *gin.Context) {
@@ -104,7 +114,7 @@ func CreateVehicleCategory(ctx *gin.Context) {
 
 	newId := uuid.New()
 	vehicleCategory.IdVehicleCategory = newId
-	vehicleCategory.ColorCriteria = utils.StringArray(newCategory.ColorCriteria)
+	vehicleCategory.ColorCriteria = utils.StringArrayDB(newCategory.ColorCriteria)
 
 	if err := crdbgorm.ExecuteTx(context.Background(), db, nil, func(tx *gorm.DB) error {
 		if err := tx.Model(&vehicleType).First(&vehicleType, "vehicle_type = ?", &newCategory.VehicleType).Error; err != nil {
@@ -134,5 +144,49 @@ func CreateVehicleCategory(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, gin.H{
 		"message": "Kategori kendaraan berhasil ditambahkan",
+	})
+}
+
+func GetVehicle(ctx *gin.Context) {
+	db := database.GetDB()
+	var vehicles []VehicleData
+	var result = make([]gin.H, 0)
+
+	// Query with ordering
+	if err := db.Table("vehicle_categories AS vehicle").
+		Select("vehicle.id_vehicle_category, types.vehicle_type, engines.vehicle_engine_type AS vehicle_engine, vehicle.color_criteria, vehicle.created_at").
+		Joins("JOIN vehicle_types AS types ON types.id_vehicle_type = vehicle.id_vehicle_type").
+		Joins("JOIN vehicle_engines AS engines ON engines.id_vehicle_engine = vehicle.id_vehicle_engine").
+		Where("vehicle.id_status = ?", 1).
+		Find(&vehicles).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Process the result
+	for _, vehicle := range vehicles {
+		// Extract and clean up color_criteria
+		colorCriteria := ""
+		if len(vehicle.ColorCriteria) > 0 {
+			// Remove { } and replace , with ", "
+			colorCriteria = strings.Trim(vehicle.ColorCriteria[0], "{}")
+			colorCriteria = strings.ReplaceAll(colorCriteria, ",", ", ")
+		}
+
+		result = append(result, gin.H{
+			"idVehicleCat":         vehicle.IdVehicleCategory,
+			"vehicleType":          vehicle.VehicleType,
+			"vehicleEngine":        vehicle.VehicleEngine,
+			"vehicleColorCriteria": colorCriteria, // Store as cleaned string
+			"createdAt":            vehicle.CreatedAt,
+		})
+	}
+
+	// Return the JSON response
+	ctx.JSON(http.StatusOK, gin.H{
+		"data": result,
 	})
 }

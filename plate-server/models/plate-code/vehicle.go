@@ -22,9 +22,9 @@ type VehicleEngine struct {
 }
 
 type VehicleCategory struct {
-	IdVehicleCategory uuid.UUID         `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id_vehicle_cat"`
-	IdVehicleType     uuid.UUID         `gorm:"type:uuid" json:"id_type"`
-	IdVehicleEngine   uuid.UUID         `gorm:"type:uuid" json:"id_engine"`
-	ColorCriteria     utils.StringArray `gorm:"type:text[];not null" valid:"required~Harap tambahkan kriteria warna jenis kendaraan" json:"color_criteria"`
+	IdVehicleCategory uuid.UUID           `gorm:"primaryKey;type:uuid;default:uuid_generate_v4()" json:"id_vehicle_cat"`
+	IdVehicleType     uuid.UUID           `gorm:"type:uuid" json:"id_type"`
+	IdVehicleEngine   uuid.UUID           `gorm:"type:uuid" json:"id_engine"`
+	ColorCriteria     utils.StringArrayDB `gorm:"type:text[];not null" valid:"required~Harap tambahkan kriteria warna jenis kendaraan" json:"color_criteria"`
 	models.GormModel
 }
