@@ -58,6 +58,36 @@ func CreateRegionCode(ctx *gin.Context) {
 	})
 }
 
-func CreateCodePosition(ctx *gin.Context)  {
-	
+func GetRegionCode(ctx *gin.Context) {
+	db := database.GetDB()
+	var RegionCode []platecode.RegionPlateCode
+
+	// Query with ordering
+	if err := db.Select("id_region_code, region_code, region_area, note, created_at").
+		Order("created_at DESC").
+		Where("id_status = ?", 1).
+		Find(&RegionCode).Error; err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// Preallocate memory for efficiency
+	result := make([]gin.H, 0, len(RegionCode))
+
+	// Transform data
+	for _, rc := range RegionCode {
+		result = append(result, gin.H{
+			"idRegion":    rc.IdRegionCode,
+			"regionCode":  rc.RegionCode,
+			"regionArea":  rc.RegionArea,
+			"regionNote":  rc.Note,
+			"regionAdded": rc.CreatedAt,
+		})
+	}
+
+	// Return JSON response
+	ctx.JSON(http.StatusOK, gin.H{"data": result})
 }
