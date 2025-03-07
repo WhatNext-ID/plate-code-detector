@@ -206,6 +206,7 @@ func CheckPlateData(ctx *gin.Context) {
 		return
 	}
 
+	// Get Vehicle Register Area
 	vehicleRegister, err := CheckVehicleRegister(db, idRegion, body)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
