@@ -20,6 +20,7 @@ func StartApp() *gin.Engine {
 
 	vehicle := api.Group("/vehicle")
 	{
+		vehicle.GET("/category", controllers.GetVehicle)
 		vehicle.Use(middleware.Auth())
 		vehicle.POST("/engine", controllers.CreateVehicleEngine)
 		vehicle.POST("/type", controllers.CreateVehicleType)
@@ -28,9 +29,17 @@ func StartApp() *gin.Engine {
 
 	plateCode := api.Group("/plate-code")
 	{
+		plateCode.GET("/region", controllers.GetRegionCode)
+		plateCode.GET("/register", controllers.GetRegisterCode)
+		plateCode.GET("/register/:regionCode", controllers.GetRegisterCodeByRegionCode)
 		plateCode.Use(middleware.Auth())
 		plateCode.POST("/region", controllers.CreateRegionCode)
 		plateCode.POST("/register/:region", controllers.CreateRegisterCode)
+	}
+
+	checkData := api.Group("/check-data")
+	{
+		checkData.POST("/", controllers.CheckPlateData)
 	}
 
 	return r
