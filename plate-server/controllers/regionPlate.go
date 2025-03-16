@@ -10,10 +10,10 @@ import (
 )
 
 type RegionCode struct {
-	Code         string `json:"code"`
-	Area         string `json:"area"`
-	Note         string `json:"note"`
-	CodePosition string `json:"position"`
+	Code         string  `json:"code"`
+	Area         string  `json:"area"`
+	Note         *string `json:"note"`
+	CodePosition string  `json:"position"`
 }
 
 func CreateRegionCode(ctx *gin.Context) {
