@@ -137,8 +137,8 @@ func CheckVehicleRegister(db *gorm.DB, idRegion uuid.UUID, register DataCode) (m
 // Check Vehicle Type or Status by Plate Color
 func CheckVehicleStatus(db *gorm.DB, status DataCode) (map[string]interface{}, error) {
 	var vehicleStatus struct {
-		VehicleType   string `json:"vehicleType"`
-		VehicleEngine string `json:"vehicleEngine"`
+		VehicleType   *string `json:"vehicleType"`
+		VehicleEngine *string `json:"vehicleEngine"`
 	}
 
 	// Ensure AdditionalPlateColor is only included if not nil
