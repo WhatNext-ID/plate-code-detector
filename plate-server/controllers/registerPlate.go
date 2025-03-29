@@ -14,10 +14,10 @@ import (
 )
 
 type RegisterCode struct {
-	RegisterCode string `json:"registerCode"`
-	RegisterCity string `json:"registerCity"`
-	CodePosition *int   `json:"codePosition"`
-	Note         string `json:"note"`
+	RegisterCode string  `json:"registerCode"`
+	RegisterCity string  `json:"registerCity"`
+	CodePosition *int    `json:"codePosition"`
+	Note         *string `json:"note"`
 }
 
 func CreateRegisterCode(ctx *gin.Context) {
