@@ -34,7 +34,7 @@ func StartApp() *gin.Engine {
 		plateCode.GET("/register/:regionCode", controllers.GetRegisterCodeByRegionCode)
 		plateCode.Use(middleware.Auth())
 		plateCode.POST("/region", controllers.CreateRegionCode)
-		plateCode.POST("/register/:region", controllers.CreateRegisterCode)
+		plateCode.POST("/register/:regionCode", controllers.CreateRegisterCode)
 	}
 
 	checkData := api.Group("/check-data")
