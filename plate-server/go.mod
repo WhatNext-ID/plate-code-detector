@@ -1,4 +1,4 @@
-module server
+module plate-server
 
 go 1.24.3
 

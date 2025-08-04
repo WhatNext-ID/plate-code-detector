@@ -1,8 +1,8 @@
 package router
 
 import (
-	"server/controllers"
-	"server/middleware"
+	"plate-server/controllers"
+	"plate-server/middleware"
 
 	"github.com/gin-gonic/gin"
 )

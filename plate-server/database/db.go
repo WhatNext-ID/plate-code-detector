@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	platecode "server/models/plate-code"
-	user "server/models/user"
+	platecode "plate-server/models/plate-code"
+	"plate-server/models/user"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"

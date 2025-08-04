@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"net/http"
-	"server/database"
-	platecode "server/models/plate-code"
+	"plate-server/database"
+	platecode "plate-server/models/plate-code"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

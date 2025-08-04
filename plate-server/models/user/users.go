@@ -2,8 +2,8 @@ package user
 
 import (
 	"fmt"
-	"server/helpers"
-	"server/models"
+	"plate-server/helpers"
+	"plate-server/models"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"

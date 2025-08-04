@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"server/database"
-	platecode "server/models/plate-code"
+	"plate-server/database"
+	platecode "plate-server/models/plate-code"
 
 	"github.com/cockroachdb/cockroach-go/v2/crdb/crdbgorm"
 	"github.com/gin-gonic/gin"

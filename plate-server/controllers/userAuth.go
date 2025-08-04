@@ -3,9 +3,9 @@ package controllers
 import (
 	"context"
 	"net/http"
-	"server/database"
-	"server/helpers"
-	"server/models/user"
+	"plate-server/database"
+	"plate-server/helpers"
+	"plate-server/models/user"
 
 	"github.com/cockroachdb/cockroach-go/v2/crdb/crdbgorm"
 	"github.com/gin-gonic/gin"

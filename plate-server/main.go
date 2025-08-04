@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"server/database"
-	"server/router"
+	"plate-server/database"
+	"plate-server/router"
 
 	"github.com/joho/godotenv"
 )

@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"net/http"
-	"server/helpers"
+	"plate-server/helpers"
 
 	"github.com/gin-gonic/gin"
 )

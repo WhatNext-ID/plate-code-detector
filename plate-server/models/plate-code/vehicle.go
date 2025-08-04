@@ -1,8 +1,8 @@
 package platecode
 
 import (
-	"server/models"
-	"server/utils"
+	"plate-server/models"
+	"plate-server/utils"
 
 	"github.com/google/uuid"
 )
