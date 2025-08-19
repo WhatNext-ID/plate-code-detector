@@ -2,12 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"plate-server/database"
 	"plate-server/router"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -19,11 +16,6 @@ func main() {
 	}
 
 	database.StartDB()
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
 
 	var PORT = os.Getenv("PORT")
 

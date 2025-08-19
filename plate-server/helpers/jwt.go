@@ -3,7 +3,6 @@ package helpers
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -11,18 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 )
 
-var err error
 var tokenExpirationDuration = time.Hour * 8
 
 func GenerateToken(id uuid.UUID, nama string) string {
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
 	claims := jwt.MapClaims{
 		"id":   id,
 		"nama": nama,
@@ -43,11 +35,6 @@ func GenerateToken(id uuid.UUID, nama string) string {
 }
 
 func VerifyToken(ctx *gin.Context) (interface{}, error) {
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
 	errRes := errors.New("token is invalid")
 	headerToken := ctx.Request.Header.Get("Authorization")
 	bearer := strings.HasPrefix(headerToken, "Bearer ")
