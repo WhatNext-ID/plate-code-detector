@@ -1,6 +1,7 @@
 package router
 
 import (
+	"os"
 	"plate-server/controllers"
 	"plate-server/middleware"
 
@@ -8,6 +9,13 @@ import (
 )
 
 func StartApp() *gin.Engine {
+	ginMode := os.Getenv("GIN_MODE")
+	if ginMode == "" {
+		ginMode = gin.DebugMode // default to "debug"
+	}
+
+	gin.SetMode(ginMode)
+
 	r := gin.Default()
 
 	api := r.Group("/v1")
