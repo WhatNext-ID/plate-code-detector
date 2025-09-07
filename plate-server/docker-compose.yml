@@ -1,0 +1,11 @@
+services:
+  plate-go:
+    build: .
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: ${PORT}
+      SECRET: ${SECRET}
+      GIN_MODE: ${GIN_MODE}
+    restart: always
+    ports:
+      - '${PORT}:5050'
