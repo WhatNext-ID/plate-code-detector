@@ -1,0 +1,38 @@
+name: WhatBorder Backend (Golang)
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo (not strictly needed, but good practice)
+        uses: actions/checkout@v4
+
+      - name: Deploy to cloud server
+        uses: fifsky/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          user: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          command: |
+            # clone if not exists
+            if [ ! -d ~/PlateCode ]; then
+              git clone https://github.com/WhatNext-ID/plate-code-detector ~/PlateCode
+            fi
+
+            cd ~/PlateCode
+            git pull origin main
+
+            cd plate-server
+
+            docker compose down --remove-orphans
+            docker compose --project-name plate-code up --build -d
+
+            docker image prune -a -f
