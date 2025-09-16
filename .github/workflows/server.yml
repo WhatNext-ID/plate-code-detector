@@ -1,4 +1,4 @@
-name: WhatBorder Backend (Golang)
+name: PlatCode Backend (Golang)
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo (not strictly needed, but good practice)
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Deploy to cloud server
