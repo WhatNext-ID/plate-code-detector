@@ -1,7 +1,5 @@
-import { version } from 'react';
+import Layout from './components/layout/layout';
 
-function App() {
-  return <h1>Vite + React {version}</h1>;
+export default function App() {
+  return <Layout />;
 }
-
-export default App;
