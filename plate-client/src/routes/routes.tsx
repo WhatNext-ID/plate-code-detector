@@ -10,10 +10,10 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: () => <Navigate to="dashboard" replace />,
+        Component: () => <Navigate to="ikhtisar" replace />,
       },
       {
-        path: 'dashboard',
+        path: 'ikhtisar',
         Component: Dashboard,
       },
       {
