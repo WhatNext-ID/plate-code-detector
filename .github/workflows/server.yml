@@ -15,24 +15,26 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy to cloud server
-        uses: garygrossgarten/github-action-ssh@release
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
-          command: |
-            set -e
-            echo "=== Clone/Update Repo ==="
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 5m
+          command_timeout: 20m
+          script: |
+            uname -a
+            whoami
+
             if [ ! -d ~/PlateCode ]; then
               git clone https://github.com/WhatNext-ID/plate-code-detector ~/PlateCode
             fi
             cd ~/PlateCode
             git pull origin main
                   
-            echo "=== Build & Deploy ==="
             cd plate-server
             docker compose down --remove-orphans
             docker compose --project-name plate-code up --build -d
                   
-            echo "=== Cleanup ==="
-            docker image prune -f
+            docker image prune -a
