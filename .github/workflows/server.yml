@@ -22,17 +22,18 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           command: |
-            # clone if not exists
+            set -e
+            echo "=== Clone/Update Repo ==="
             if [ ! -d ~/PlateCode ]; then
               git clone https://github.com/WhatNext-ID/plate-code-detector ~/PlateCode
             fi
-
             cd ~/PlateCode
             git pull origin main
-
+                  
+            echo "=== Build & Deploy ==="
             cd plate-server
-
             docker compose down --remove-orphans
-            docker compose --project-name plate-code up --build -d
-
-            docker image prune -a -f
+            docker compose --project-name plate-code up --build --pull -d
+                  
+            echo "=== Cleanup ==="
+            docker image prune -f

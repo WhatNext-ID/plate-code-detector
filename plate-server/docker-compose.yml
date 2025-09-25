@@ -6,6 +6,7 @@ services:
       PORT: ${PORT}
       SECRET: ${SECRET}
       GIN_MODE: ${GIN_MODE}
+      ORIGIN: ${ORIGIN}
     restart: always
     ports:
       - '${PORT}:5050'
