@@ -4,7 +4,10 @@ import (
 	"os"
 	"plate-server/controllers"
 	"plate-server/middleware"
+	"strings"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,6 +20,22 @@ func StartApp() *gin.Engine {
 	gin.SetMode(ginMode)
 
 	r := gin.Default()
+
+	origins := os.Getenv("ORIGIN")
+	raw := strings.Split(origins, ",")
+	var allowedOrigins []string
+	for _, o := range raw {
+		allowedOrigins = append(allowedOrigins, strings.TrimSpace(o))
+	}
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     allowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	api := r.Group("/v1")
 

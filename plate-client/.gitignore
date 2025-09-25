@@ -11,7 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
-.emv
+.env
 
 # Package NPM Lock
 # npm i --package-lock-only
