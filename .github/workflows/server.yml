@@ -21,6 +21,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          timeout: 5m
+          command_timeout: 20m
           script: |
             set -e
             echo "=== Clone/Update Repo ==="
@@ -33,7 +35,7 @@ jobs:
             echo "=== Build & Deploy ==="
             cd plate-server
             docker compose down --remove-orphans
-            docker compose --project-name plate-code up --build --pull -d
+            docker compose --project-name plate-code up --build -d
                   
             echo "=== Cleanup ==="
             docker image prune -f
