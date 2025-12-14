@@ -33,5 +33,5 @@ jobs:
           cd plate-server
           docker compose down --remove-orphans
           docker compose --project-name platecode up --build -d
-          docker image prune -a -f
+          docker image prune -f
           EOF
