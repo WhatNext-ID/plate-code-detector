@@ -17,30 +17,30 @@ import {
   getCoreRowModel,
 } from '@tanstack/react-table';
 
+const columns: ColumnDef<RegionList>[] = [
+  {
+    header: 'No.',
+    cell: ({ row }) => row.index + 1,
+  },
+  {
+    accessorKey: 'regionArea',
+    header: 'Daerah',
+  },
+  {
+    accessorKey: 'regionCode',
+    header: 'Kode Plat',
+  },
+  {
+    accessorKey: 'regionNote',
+    header: 'Keterangan',
+  },
+];
+
 export default function Region() {
   const { data, isLoading } = useQuery({
     queryKey: ['list-region'],
     queryFn: async () => listRegionPlate(),
   });
-
-  const columns: ColumnDef<RegionList>[] = [
-    {
-      header: 'No.',
-      cell: ({ row }) => row.index + 1,
-    },
-    {
-      accessorKey: 'regionArea',
-      header: 'Daerah',
-    },
-    {
-      accessorKey: 'regionCode',
-      header: 'Kode Plat',
-    },
-    {
-      accessorKey: 'regionNote',
-      header: 'Keterangan',
-    },
-  ];
 
   const table = useReactTable({
     data: data ?? [],
@@ -61,7 +61,7 @@ export default function Region() {
                     ? null
                     : flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                 </TableHead>
               ))}
