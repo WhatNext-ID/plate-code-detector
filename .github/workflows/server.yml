@@ -1,48 +1,54 @@
-name: PlatCode Backend (Golang)
+name: PlatCode Backend
 
 on:
   push:
-    branches: ['main']
-  pull_request:
     branches: ['main']
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup SSH
-        if: github.event_name == 'push'
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./plate-server
+          push: true
+          tags: |
+            ghcr.io/whatnext-id/plate-code-detector:latest
+            ghcr.io/whatnext-id/plate-code-detector:${{ github.sha }}
+
+      - name: Deploy
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p 22 -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to server
-        if: github.event_name == 'push'
-        run: |
           ssh -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
 
-          set -e
+          cd ~/PlateCode/plate-server
 
-          if [ ! -d ~/PlateCode ]; then
-            git clone https://github.com/WhatNext-ID/plate-code-detector ~/PlateCode
-          fi
+          docker compose pull
+          docker compose up -d
 
-          cd ~/PlateCode
+          docker image prune -f
 
-          git fetch origin
-          git reset --hard origin/main
-
-          cd plate-server
-
-          docker compose --project-name platecode up --build -d
-
-          docker compose --project-name platecode ps
+          docker compose ps
 
           EOF

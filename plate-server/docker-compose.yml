@@ -1,12 +1,15 @@
 services:
   api:
-    build: .
+    image: ghcr.io/whatnext-id/plate-code-detector:latest
+
     environment:
       DATABASE_URL: ${DATABASE_URL}
       PORT: ${PORT}
       SECRET: ${SECRET}
       GIN_MODE: ${GIN_MODE}
       ORIGIN: ${ORIGIN}
+
     restart: always
+
     ports:
       - '${PORT}:5050'
