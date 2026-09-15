@@ -55,16 +55,11 @@ jobs:
 
           cd ~/PlateCode/plate-server
 
-          echo "Pulling Docker image..."
           docker compose pull
-
-          echo "Starting container..."
           docker compose up -d
 
-          echo "Cleaning old images..."
           docker image prune -f
 
-          echo "Container status..."
           docker compose ps
 
           EOF
