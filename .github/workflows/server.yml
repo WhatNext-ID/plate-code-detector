@@ -34,21 +34,37 @@ jobs:
 
       - name: Deploy
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          set -euxo pipefail
 
-          ssh -i ~/.ssh/id_ed25519 \
-            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+          mkdir -p ~/.ssh
+
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+          ssh -o StrictHostKeyChecking=yes \
+            -i ~/.ssh/id_ed25519 \
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" << 'EOF'
+
+          set -euxo pipefail
+
+          echo "Connected to server"
+          whoami
+          hostname
 
           cd ~/PlateCode/plate-server
 
+          echo "Pulling Docker image..."
           docker compose pull
+
+          echo "Starting container..."
           docker compose up -d
 
+          echo "Cleaning old images..."
           docker image prune -f
 
+          echo "Container status..."
           docker compose ps
 
           EOF
