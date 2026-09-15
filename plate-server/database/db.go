@@ -17,6 +17,7 @@ func StartDB() {
 	var err error
 
 	databaseURL := os.Getenv("DATABASE_URL")
+
 	db, err = gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Terjadi Kesalahan saat koneksi ke db :", err)
