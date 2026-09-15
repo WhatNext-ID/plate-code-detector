@@ -15,22 +15,34 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup SSH
+        if: github.event_name == 'push'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p 22 -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          cat ~/.ssh/known_hosts
 
       - name: Deploy to server
+        if: github.event_name == 'push'
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 \
+            ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+
+          set -e
+
           if [ ! -d ~/PlateCode ]; then
             git clone https://github.com/WhatNext-ID/plate-code-detector ~/PlateCode
           fi
+
           cd ~/PlateCode
-          git pull origin main
+
+          git fetch origin
+          git reset --hard origin/main
+
           cd plate-server
-          docker compose down --remove-orphans
+
           docker compose --project-name platecode up --build -d
+
+          docker compose --project-name platecode ps
+
           EOF
