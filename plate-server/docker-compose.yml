@@ -1,3 +1,4 @@
+name: plate-server
 services:
   api:
     image: ghcr.io/whatnext-id/plate-code-detector:${IMAGE_TAG:-latest}
