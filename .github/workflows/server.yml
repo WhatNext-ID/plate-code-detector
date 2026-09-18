@@ -1,4 +1,4 @@
-name: PlatCode Backend
+name: PlatCode Backend With Go
 
 on:
   push:
