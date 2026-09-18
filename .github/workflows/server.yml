@@ -72,10 +72,17 @@ jobs:
           echo "Pulling image..."
           docker pull ghcr.io/whatnext-id/plate-code-detector:${IMAGE_TAG}
 
+          echo "Checking compose configuration..."
+          IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.yml config
+
           echo "Starting application..."
-          IMAGE_TAG=${IMAGE_TAG} docker compose up -d --remove-orphans
+          IMAGE_TAG=${IMAGE_TAG} docker compose \
+            -f docker-compose.yml \
+            up -d \
+            --no-build \
+            --remove-orphans
 
           echo "Application status..."
-          docker compose ps
+          docker compose -f docker-compose.yml ps
 
           EOF
