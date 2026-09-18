@@ -61,7 +61,7 @@ jobs:
 
           set -e
 
-          cd ~/PlateCode
+          cd ~/PlateCode/plate-server
           git fetch origin main
 
           echo "Logging in to GHCR..."
