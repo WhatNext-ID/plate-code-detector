@@ -62,10 +62,12 @@ jobs:
           set -e
 
           cd ~/PlateCode/plate-server
-          git pull origin main
+
+          echo "Updating deployment files..."
+          git fetch origin main
+          git reset --hard origin/main
 
           echo "Logging in to GHCR..."
-
           echo '${GHCR_TOKEN}' | docker login ghcr.io \
             -u '${GHCR_USERNAME}' \
             --password-stdin
@@ -74,16 +76,19 @@ jobs:
           docker pull ghcr.io/whatnext-id/plate-code-detector:${IMAGE_TAG}
 
           echo "Checking compose configuration..."
-          IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.yml config
-
-          echo "Starting application..."
           IMAGE_TAG=${IMAGE_TAG} docker compose \
             -f docker-compose.yml \
-            up -d \
-            --no-build \
-            --remove-orphans
+            config
+
+          echo "Stopping old containers..."
+          docker compose down --remove-orphans
+
+          echo "Starting application..."
+          IMAGE_TAG=${IMAGE_TAG} docker compose --project-name plate-code up -d --no-build --remove-orphans
 
           echo "Application status..."
-          docker compose -f docker-compose.yml ps
+          docker compose ps
+
+          echo "Deployment completed successfully."
 
           EOF
