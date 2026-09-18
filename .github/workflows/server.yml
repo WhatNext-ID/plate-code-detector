@@ -37,7 +37,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Setup SSH
+      - name: Setup SSH and deploy
         run: |
           mkdir -p ~/.ssh
 
