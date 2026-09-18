@@ -1,15 +1,26 @@
+# =========================
+# Build stage
+# =========================
 FROM golang:1.27-alpine AS builder
 
 WORKDIR /app
 
+# Dependencies first for Docker layer caching
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Source code
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /server .
+# Build static Linux binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -ldflags="-s -w" -o /server .
 
-FROM alpine:latest
+
+# =========================
+# Runtime stage
+# =========================
+FROM alpine:3.22
 
 WORKDIR /app
 

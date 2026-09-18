@@ -44,23 +44,25 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
 
       - name: Deploy to server
+        env:
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           ssh \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
             -o ConnectTimeout=15 \
             -i ~/.ssh/id_ed25519 \
-            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" << 'EOF'
+            "${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}" << EOF
 
           set -e
 
           cd ~/PlateCode/plate-server
 
-          echo "Pulling latest image..."
-          docker compose pull
+          echo "Pulling image..."
+          docker pull ghcr.io/whatnext-id/plate-code-detector:${IMAGE_TAG}
 
           echo "Starting application..."
-          docker compose up -d
+          IMAGE_TAG=${IMAGE_TAG} docker compose up -d --remove-orphans
 
           echo "Application status..."
           docker compose ps
