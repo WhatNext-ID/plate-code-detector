@@ -49,6 +49,8 @@ jobs:
       - name: Deploy to server
         env:
           IMAGE_TAG: ${{ github.sha }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PAT }}
         run: |
           ssh \
             -o StrictHostKeyChecking=no \
@@ -60,6 +62,12 @@ jobs:
           set -e
 
           cd ~/PlateCode/plate-server
+
+          echo "Logging in to GHCR..."
+
+          echo '${GHCR_TOKEN}' | docker login ghcr.io \
+            -u '${GHCR_USERNAME}' \
+            --password-stdin
 
           echo "Pulling image..."
           docker pull ghcr.io/whatnext-id/plate-code-detector:${IMAGE_TAG}
