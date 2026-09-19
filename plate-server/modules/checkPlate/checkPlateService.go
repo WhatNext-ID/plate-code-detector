@@ -1,10 +1,10 @@
-package controllers
+package checkplate
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"plate-server/database"
-	platecode "plate-server/models/plate-code"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -12,23 +12,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type DataCode struct {
-	BasePlateColor       string  `json:"basePlateColor"`
-	TextPlateColor       string  `json:"textPlateColor"`
-	AdditionalPlateColor *string `json:"additionalPlateColor"`
-	RegionCode           string  `json:"regionCode"`
-	RegisterFirstCode    string  `json:"registerFirstCode"`
-	RegisterLastCode     string  `json:"registerLastCode"`
-	RegisterCode         string  `json:"registerCode"`
-}
-
 // Check Vehicle Region
-func CheckVehicleRegion(db *gorm.DB, region DataCode) (map[string]interface{}, uuid.UUID, error) {
-	var vehicleRegion platecode.RegionPlateCode
+func checkVehicleRegion(db *gorm.DB, region string) (*VehicleRegionResponse, uuid.UUID, error) {
+	vehicleRegionDb := VehicleRegionQuery{}
 
 	err := db.Table("region_plate_codes").Select("id_region_code, region_code, region_area, note").
-		Where("region_code = ? AND id_status = ?", region.RegionCode, 1).
-		First(&vehicleRegion).Error
+		Where("region_code = ? AND id_status = ?", region, 1).
+		First(&vehicleRegionDb).Error
 
 	if err != nil {
 		return nil, uuid.UUID{}, err
@@ -38,22 +28,20 @@ func CheckVehicleRegion(db *gorm.DB, region DataCode) (map[string]interface{}, u
 		return nil, uuid.UUID{}, nil
 	}
 
-	// Return the result as a map object
-	result := map[string]interface{}{
-		"regionCode": vehicleRegion.RegionCode,
-		"regionArea": vehicleRegion.RegionArea,
-		"note":       vehicleRegion.Note,
+	vehicleRegion := &VehicleRegionResponse{
+		RegionCode: vehicleRegionDb.RegionCode,
+		RegionArea: vehicleRegionDb.RegionArea,
+		Note:       vehicleRegionDb.Note,
 	}
 
-	return result, vehicleRegion.IdRegionCode, nil
+	return vehicleRegion, vehicleRegionDb.IdRegionCode, nil
 }
 
 // CheckVehicleRegister searches for a vehicle register based on priority order
-func CheckVehicleRegister(db *gorm.DB, idRegion uuid.UUID, register DataCode) (map[string]interface{}, error) {
-	var (
-		registerCodePosition []sql.NullInt64
-		registerCode         platecode.RegisterPlateCode
-	)
+func checkVehicleRegister(db *gorm.DB, idRegion uuid.UUID, register VehicleRegisterParam) (*VehicleRegister, error) {
+	var registerCodePosition []sql.NullInt64
+
+	vehicleRegister := VehicleRegister{}
 
 	// Fetch distinct code positions
 	err := db.Table("register_plate_codes").
@@ -87,14 +75,10 @@ func CheckVehicleRegister(db *gorm.DB, idRegion uuid.UUID, register DataCode) (m
 			err = db.Table("register_plate_codes").
 				Select("register_code, register_city, note").
 				Where("id_region_code = ? AND register_code = ?", idRegion, register.RegisterCode).
-				First(&registerCode).Error
+				First(&vehicleRegister).Error
 
 			if err == nil {
-				return map[string]interface{}{
-					"register_code": registerCode.RegisterCode,
-					"register_city": registerCode.RegisterCity,
-					"note":          registerCode.Note,
-				}, nil
+				return &vehicleRegister, nil
 			}
 		}
 
@@ -103,14 +87,10 @@ func CheckVehicleRegister(db *gorm.DB, idRegion uuid.UUID, register DataCode) (m
 			err = db.Table("register_plate_codes").
 				Select("register_code, register_city, note").
 				Where("id_region_code = ? AND code_position = ? AND register_code = ?", idRegion, *codePosition, register.RegisterFirstCode).
-				First(&registerCode).Error
+				First(&vehicleRegister).Error
 
 			if err == nil {
-				return map[string]interface{}{
-					"register_code": registerCode.RegisterCode,
-					"register_city": registerCode.RegisterCity,
-					"note":          registerCode.Note,
-				}, nil
+				return &vehicleRegister, nil
 			}
 		}
 
@@ -119,14 +99,10 @@ func CheckVehicleRegister(db *gorm.DB, idRegion uuid.UUID, register DataCode) (m
 			err = db.Table("register_plate_codes").
 				Select("register_code, register_city, note").
 				Where("id_region_code = ? AND code_position = ? AND register_code = ?", idRegion, *codePosition, register.RegisterLastCode).
-				First(&registerCode).Error
+				First(&vehicleRegister).Error
 
 			if err == nil {
-				return map[string]interface{}{
-					"register_code": registerCode.RegisterCode,
-					"register_city": registerCode.RegisterCity,
-					"note":          registerCode.Note,
-				}, nil
+				return &vehicleRegister, nil
 			}
 		}
 	}
@@ -135,19 +111,18 @@ func CheckVehicleRegister(db *gorm.DB, idRegion uuid.UUID, register DataCode) (m
 }
 
 // Check Vehicle Type or Status by Plate Color
-func CheckVehicleStatus(db *gorm.DB, status DataCode) (map[string]interface{}, error) {
-	var vehicleStatus struct {
-		VehicleType   *string `json:"vehicleType"`
-		VehicleEngine *string `json:"vehicleEngine"`
+func checkVehicleStatus(db *gorm.DB, status DataVehicleStatus) (*VehicleStatus, error) {
+	vehicleStatus := VehicleStatus{}
+
+	colorCriteria := []string{
+		status.BasePlateColor,
+		status.TextPlateColor,
 	}
 
-	// Ensure AdditionalPlateColor is only included if not nil
-	colorCriteria := []string{status.BasePlateColor, status.TextPlateColor}
 	if status.AdditionalPlateColor != nil {
 		colorCriteria = append(colorCriteria, *status.AdditionalPlateColor)
 	}
 
-	// Query Database
 	err := db.Table("vehicle_categories AS vehicle").
 		Select("types.vehicle_type, engines.vehicle_engine_type AS vehicle_engine").
 		Joins("JOIN vehicle_types AS types ON types.id_vehicle_type = vehicle.id_vehicle_type").
@@ -155,71 +130,68 @@ func CheckVehicleStatus(db *gorm.DB, status DataCode) (map[string]interface{}, e
 		Where("vehicle.color_criteria @> ? AND vehicle.id_status = ?", pq.Array(colorCriteria), 1).
 		Find(&vehicleStatus).Error
 
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if err == gorm.ErrRecordNotFound {
-		return nil, nil
-	}
-
-	// Return the result as a map object
-	result := map[string]interface{}{
-		"vehicleType":   vehicleStatus.VehicleType,
-		"vehicleEngine": vehicleStatus.VehicleEngine,
-	}
-
-	return result, nil
+	return &vehicleStatus, nil
 }
 
 // Check Plate Data
-func CheckPlateData(ctx *gin.Context) {
+func checkDetailPlate(ctx *gin.Context, body DataCode) (map[string]interface{}, error) {
 	db := database.GetDB()
-	body := DataCode{}
 
-	// Bind JSON Request Body
-	if err := ctx.ShouldBindJSON(&body); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Bad Request",
-			"message": err.Error(),
-		})
-		return
+	vehicleStatusInput := DataVehicleStatus{
+		BasePlateColor:       body.BasePlateColor,
+		AdditionalPlateColor: body.AdditionalPlateColor,
+		TextPlateColor:       body.TextPlateColor,
+	}
+	vehicleRegisterParam := VehicleRegisterParam{
+		RegisterCode:      body.RegisterCode,
+		RegisterFirstCode: body.RegisterFirstCode,
+		RegisterLastCode:  body.RegisterLastCode,
 	}
 
 	// Get Vehicle Status Data
-	vehicleStatus, err := CheckVehicleStatus(db, body)
+	vehicleStatus, err := checkVehicleStatus(db, vehicleStatusInput)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
 			"message": err.Error(),
 		})
-		return
+		return nil, err
 	}
 
 	// Get Vehicle Region Data
-	vehicleRegion, idRegion, err := CheckVehicleRegion(db, body)
+	vehicleRegion, idRegion, err := checkVehicleRegion(db, body.RegionCode)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
 			"message": err.Error(),
 		})
-		return
+		return nil, err
 	}
 
 	// Get Vehicle Register Area
-	vehicleRegister, err := CheckVehicleRegister(db, idRegion, body)
+	vehicleRegister, err := checkVehicleRegister(db, idRegion, vehicleRegisterParam)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
 			"message": err.Error(),
 		})
-		return
+		return nil, err
 	}
 
 	// Construct the final JSON response
-	ctx.JSON(http.StatusOK, gin.H{
+	result := map[string]interface{}{
 		"status":   vehicleStatus,
 		"region":   vehicleRegion,
 		"register": vehicleRegister,
-	})
+	}
+
+	return result, nil
 }

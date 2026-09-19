@@ -4,6 +4,7 @@ import (
 	"os"
 	"plate-server/controllers"
 	"plate-server/middleware"
+	checkplate "plate-server/modules/checkPlate"
 	"strings"
 	"time"
 
@@ -48,6 +49,7 @@ func StartApp() *gin.Engine {
 	vehicle := api.Group("/vehicle")
 	{
 		vehicle.GET("/category", controllers.GetVehicle)
+
 		vehicle.Use(middleware.Auth())
 		vehicle.POST("/engine", controllers.CreateVehicleEngine)
 		vehicle.POST("/type", controllers.CreateVehicleType)
@@ -59,6 +61,7 @@ func StartApp() *gin.Engine {
 		plateCode.GET("/region", controllers.GetRegionCode)
 		plateCode.GET("/register", controllers.GetRegisterCode)
 		plateCode.GET("/register/:regionCode", controllers.GetRegisterCodeByRegionCode)
+
 		plateCode.Use(middleware.Auth())
 		plateCode.POST("/region", controllers.CreateRegionCode)
 		plateCode.POST("/register/:regionCode", controllers.CreateRegisterCode)
@@ -66,7 +69,7 @@ func StartApp() *gin.Engine {
 
 	checkData := api.Group("/check-data")
 	{
-		checkData.POST("/", controllers.CheckPlateData)
+		checkData.POST("/", checkplate.CheckPlateData)
 	}
 
 	return r
