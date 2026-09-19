@@ -2,14 +2,14 @@ package checkplate
 
 import (
 	"net/http"
+	errorhandling "plate-server/utils/error-handling"
 
 	"github.com/gin-gonic/gin"
 )
 
 func CheckPlateData(ctx *gin.Context) {
-	body := DataCode{}
+	var body DataCode
 
-	// Bind JSON Request Body
 	if err := ctx.ShouldBindJSON(&body); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error":   "Bad Request",
@@ -18,17 +18,12 @@ func CheckPlateData(ctx *gin.Context) {
 		return
 	}
 
-	// Get Vehicle Status Data
-	checkDetailData, err := checkDetailPlate(ctx, body)
+	checkDetailData, err := checkDetailPlate(body)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Bad Request",
-			"message": err.Error(),
-		})
+		errorhandling.HandleServiceError(ctx, err)
 		return
 	}
 
-	// Construct the final JSON response
 	ctx.JSON(http.StatusOK, gin.H{
 		"data": checkDetailData,
 	})

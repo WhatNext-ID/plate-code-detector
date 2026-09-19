@@ -5,27 +5,37 @@ import (
 	"errors"
 	"net/http"
 	"plate-server/database"
+	errorhandling "plate-server/utils/error-handling"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
 // Check Vehicle Region
-func checkVehicleRegion(db *gorm.DB, region string) (*VehicleRegionResponse, uuid.UUID, error) {
-	vehicleRegionDb := VehicleRegionQuery{}
+func checkVehicleRegion(
+	db *gorm.DB,
+	region string,
+) (*VehicleRegionResponse, uuid.UUID, error) {
 
-	err := db.Table("region_plate_codes").Select("id_region_code, region_code, region_area, note").
+	var vehicleRegionDb VehicleRegionQuery
+
+	err := db.Table("region_plate_codes").
+		Select("id_region_code, region_code, region_area, note").
 		Where("region_code = ? AND id_status = ?", region, 1).
-		First(&vehicleRegionDb).Error
+		First(&vehicleRegionDb).
+		Error
 
-	if err != nil {
-		return nil, uuid.UUID{}, err
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, uuid.Nil, &errorhandling.ServiceError{
+			StatusCode: http.StatusNotFound,
+			ErrorName:  "Not Found",
+			Message:    "Kode wilayah kendaraan tidak ditemukan",
+		}
 	}
 
-	if err == gorm.ErrRecordNotFound {
-		return nil, uuid.UUID{}, nil
+	if err != nil {
+		return nil, uuid.Nil, err
 	}
 
 	vehicleRegion := &VehicleRegionResponse{
@@ -38,81 +48,113 @@ func checkVehicleRegion(db *gorm.DB, region string) (*VehicleRegionResponse, uui
 }
 
 // CheckVehicleRegister searches for a vehicle register based on priority order
-func checkVehicleRegister(db *gorm.DB, idRegion uuid.UUID, register VehicleRegisterParam) (*VehicleRegister, error) {
+func checkVehicleRegister(
+	db *gorm.DB,
+	idRegion uuid.UUID,
+	register VehicleRegisterParam,
+) (*VehicleRegister, error) {
+
 	var registerCodePosition []sql.NullInt64
+	var vehicleRegister VehicleRegister
 
-	vehicleRegister := VehicleRegister{}
-
-	// Fetch distinct code positions
 	err := db.Table("register_plate_codes").
 		Select("DISTINCT code_position").
 		Where("id_region_code = ?", idRegion).
-		Pluck("code_position", &registerCodePosition).Error
+		Pluck("code_position", &registerCodePosition).
+		Error
 
 	if err != nil {
 		return nil, err
 	}
 
 	if len(registerCodePosition) == 0 {
-		return nil, nil // No records found
+		return nil, &errorhandling.ServiceError{
+			StatusCode: http.StatusNotFound,
+			ErrorName:  "Not Found",
+			Message:    "Kode registrasi kendaraan tidak ditemukan",
+		}
 	}
 
-	// Convert sql.NullInt64 to []*int to safely handle NULL values
-	var codePositions []*int
 	for _, cp := range registerCodePosition {
-		if cp.Valid {
-			val := int(cp.Int64)
-			codePositions = append(codePositions, &val)
-		} else {
-			codePositions = append(codePositions, nil)
+
+		// code_position IS NULL
+		if !cp.Valid {
+			err = db.Table("register_plate_codes").
+				Select("register_code, register_city, note").
+				Where(`
+					id_region_code = ?
+					AND code_position IS NULL
+					AND register_code = ?
+				`, idRegion, register.RegisterCode).
+				First(&vehicleRegister).
+				Error
+
+			if err == nil {
+				return &vehicleRegister, nil
+			}
+
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, err
+			}
+		}
+
+		// code_position = 0
+		if cp.Valid && cp.Int64 == 0 {
+			err = db.Table("register_plate_codes").
+				Select("register_code, register_city, note").
+				Where(`
+					id_region_code = ?
+					AND code_position = ?
+					AND register_code = ?
+				`, idRegion, 0, register.RegisterFirstCode).
+				First(&vehicleRegister).
+				Error
+
+			if err == nil {
+				return &vehicleRegister, nil
+			}
+
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, err
+			}
+		}
+
+		// code_position = 1 or 2
+		if cp.Valid && (cp.Int64 == 1 || cp.Int64 == 2) {
+			err = db.Table("register_plate_codes").
+				Select("register_code, register_city, note").
+				Where(`
+					id_region_code = ?
+					AND code_position = ?
+					AND register_code = ?
+				`, idRegion, cp.Int64, register.RegisterLastCode).
+				First(&vehicleRegister).
+				Error
+
+			if err == nil {
+				return &vehicleRegister, nil
+			}
+
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, err
+			}
 		}
 	}
 
-	// Loop through all code positions
-	for _, codePosition := range codePositions {
-		if codePosition == nil {
-			// If codePosition is null, use registerCode
-			err = db.Table("register_plate_codes").
-				Select("register_code, register_city, note").
-				Where("id_region_code = ? AND register_code = ?", idRegion, register.RegisterCode).
-				First(&vehicleRegister).Error
-
-			if err == nil {
-				return &vehicleRegister, nil
-			}
-		}
-
-		if codePosition != nil && *codePosition == 0 {
-			// If codePosition is 0, use registerFirstCode
-			err = db.Table("register_plate_codes").
-				Select("register_code, register_city, note").
-				Where("id_region_code = ? AND code_position = ? AND register_code = ?", idRegion, *codePosition, register.RegisterFirstCode).
-				First(&vehicleRegister).Error
-
-			if err == nil {
-				return &vehicleRegister, nil
-			}
-		}
-
-		if codePosition != nil && (*codePosition == 1 || *codePosition == 2) {
-			// If codePosition is 1 or 2, use registerLastCode
-			err = db.Table("register_plate_codes").
-				Select("register_code, register_city, note").
-				Where("id_region_code = ? AND code_position = ? AND register_code = ?", idRegion, *codePosition, register.RegisterLastCode).
-				First(&vehicleRegister).Error
-
-			if err == nil {
-				return &vehicleRegister, nil
-			}
-		}
+	return nil, &errorhandling.ServiceError{
+		StatusCode: http.StatusNotFound,
+		ErrorName:  "Not Found",
+		Message:    "Data registrasi kendaraan tidak ditemukan",
 	}
-
-	return nil, nil
 }
 
 // Check Vehicle Type or Status by Plate Color
-func checkVehicleStatus(db *gorm.DB, status DataVehicleStatus) (*VehicleStatus, error) {
-	vehicleStatus := VehicleStatus{}
+func checkVehicleStatus(
+	db *gorm.DB,
+	status DataVehicleStatus,
+) (*VehicleStatus, error) {
+
+	var vehicleStatus VehicleStatus
 
 	colorCriteria := []string{
 		status.BasePlateColor,
@@ -120,18 +162,39 @@ func checkVehicleStatus(db *gorm.DB, status DataVehicleStatus) (*VehicleStatus, 
 	}
 
 	if status.AdditionalPlateColor != nil {
-		colorCriteria = append(colorCriteria, *status.AdditionalPlateColor)
+		colorCriteria = append(
+			colorCriteria,
+			*status.AdditionalPlateColor,
+		)
 	}
 
 	err := db.Table("vehicle_categories AS vehicle").
-		Select("types.vehicle_type, engines.vehicle_engine_type AS vehicle_engine").
-		Joins("JOIN vehicle_types AS types ON types.id_vehicle_type = vehicle.id_vehicle_type").
-		Joins("JOIN vehicle_engines AS engines ON engines.id_vehicle_engine = vehicle.id_vehicle_engine").
-		Where("vehicle.color_criteria @> ? AND vehicle.id_status = ?", pq.Array(colorCriteria), 1).
-		Find(&vehicleStatus).Error
+		Select(`
+			types.vehicle_type AS vehicle_type,
+			engines.vehicle_engine_type AS vehicle_engine
+		`).
+		Joins(`
+			JOIN vehicle_types AS types
+			ON types.id_vehicle_type = vehicle.id_vehicle_type
+		`).
+		Joins(`
+			JOIN vehicle_engines AS engines
+			ON engines.id_vehicle_engine = vehicle.id_vehicle_engine
+		`).
+		Where(
+			"vehicle.color_criteria @> ? AND vehicle.id_status = ?",
+			pq.Array(colorCriteria),
+			1,
+		).
+		First(&vehicleStatus).
+		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+		return nil, &errorhandling.ServiceError{
+			StatusCode: http.StatusNotFound,
+			ErrorName:  "Not Found",
+			Message:    "Jenis kendaraan tidak ditemukan",
+		}
 	}
 
 	if err != nil {
@@ -142,7 +205,7 @@ func checkVehicleStatus(db *gorm.DB, status DataVehicleStatus) (*VehicleStatus, 
 }
 
 // Check Plate Data
-func checkDetailPlate(ctx *gin.Context, body DataCode) (map[string]interface{}, error) {
+func checkDetailPlate(body DataCode) (*CheckDetail, error) {
 	db := database.GetDB()
 
 	vehicleStatusInput := DataVehicleStatus{
@@ -150,47 +213,42 @@ func checkDetailPlate(ctx *gin.Context, body DataCode) (map[string]interface{}, 
 		AdditionalPlateColor: body.AdditionalPlateColor,
 		TextPlateColor:       body.TextPlateColor,
 	}
+
 	vehicleRegisterParam := VehicleRegisterParam{
 		RegisterCode:      body.RegisterCode,
 		RegisterFirstCode: body.RegisterFirstCode,
 		RegisterLastCode:  body.RegisterLastCode,
 	}
 
-	// Get Vehicle Status Data
-	vehicleStatus, err := checkVehicleStatus(db, vehicleStatusInput)
+	vehicleStatus, err := checkVehicleStatus(
+		db,
+		vehicleStatusInput,
+	)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Bad Request",
-			"message": err.Error(),
-		})
 		return nil, err
 	}
 
-	// Get Vehicle Region Data
-	vehicleRegion, idRegion, err := checkVehicleRegion(db, body.RegionCode)
+	vehicleRegion, idRegion, err := checkVehicleRegion(
+		db,
+		body.RegionCode,
+	)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Bad Request",
-			"message": err.Error(),
-		})
 		return nil, err
 	}
 
-	// Get Vehicle Register Area
-	vehicleRegister, err := checkVehicleRegister(db, idRegion, vehicleRegisterParam)
+	vehicleRegister, err := checkVehicleRegister(
+		db,
+		idRegion,
+		vehicleRegisterParam,
+	)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Bad Request",
-			"message": err.Error(),
-		})
 		return nil, err
 	}
 
-	// Construct the final JSON response
-	result := map[string]interface{}{
-		"status":   vehicleStatus,
-		"region":   vehicleRegion,
-		"register": vehicleRegister,
+	result := &CheckDetail{
+		Region:   vehicleRegion,
+		Register: vehicleRegister,
+		Status:   vehicleStatus,
 	}
 
 	return result, nil

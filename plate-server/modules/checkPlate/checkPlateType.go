@@ -38,12 +38,18 @@ type VehicleRegisterParam struct {
 }
 
 type VehicleRegister struct {
-	RegisterCode string  `gorm:"register_code" json:"registerCode"`
-	RegisterCity string  `gorm:"register_city" json:"registerCity"`
+	RegisterCode string  `gorm:"column:register_code" json:"registerCode"`
+	RegisterCity string  `gorm:"column:register_city" json:"registerCity"`
 	Note         *string `gorm:"column:note" json:"note"`
 }
 
 type VehicleStatus struct {
 	VehicleType   string `gorm:"column:vehicle_type" json:"vehicleType"`
 	VehicleEngine string `gorm:"column:vehicle_engine" json:"vehicleEngine"`
+}
+
+type CheckDetail struct {
+	Region   *VehicleRegionResponse `json:"region"`
+	Register *VehicleRegister       `json:"register"`
+	Status   *VehicleStatus         `json:"status"`
 }

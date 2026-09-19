@@ -2,9 +2,12 @@ package router
 
 import (
 	"os"
-	"plate-server/controllers"
 	"plate-server/middleware"
+	"plate-server/modules/auth"
 	checkplate "plate-server/modules/checkPlate"
+	regionplate "plate-server/modules/regionPlate"
+	registerplate "plate-server/modules/registerPlate"
+	"plate-server/modules/vehicle"
 	"strings"
 	"time"
 
@@ -38,38 +41,38 @@ func StartApp() *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	api := r.Group("/v1")
+	apiEndpoint := r.Group("/v1")
 
-	auth := api.Group("/auth")
+	authenticationEndpoint := apiEndpoint.Group("/auth")
 	{
-		auth.POST("/register", controllers.UserRegister)
-		auth.POST("/login", controllers.UserLogin)
+		authenticationEndpoint.POST("/register", auth.UserRegister)
+		authenticationEndpoint.POST("/login", auth.UserLogin)
 	}
 
-	vehicle := api.Group("/vehicle")
+	vehicleEndpoint := apiEndpoint.Group("/vehicle")
 	{
-		vehicle.GET("/category", controllers.GetVehicle)
+		vehicleEndpoint.GET("/category", vehicle.GetVehicle)
 
-		vehicle.Use(middleware.Auth())
-		vehicle.POST("/engine", controllers.CreateVehicleEngine)
-		vehicle.POST("/type", controllers.CreateVehicleType)
-		vehicle.POST("/category", controllers.CreateVehicleCategory)
+		vehicleEndpoint.Use(middleware.Auth())
+		vehicleEndpoint.POST("/engine", vehicle.CreateVehicleEngine)
+		vehicleEndpoint.POST("/type", vehicle.CreateVehicleType)
+		vehicleEndpoint.POST("/category", vehicle.CreateVehicleCategory)
 	}
 
-	plateCode := api.Group("/plate-code")
+	plateCodeEndpoint := apiEndpoint.Group("/plate-code")
 	{
-		plateCode.GET("/region", controllers.GetRegionCode)
-		plateCode.GET("/register", controllers.GetRegisterCode)
-		plateCode.GET("/register/:regionCode", controllers.GetRegisterCodeByRegionCode)
+		plateCodeEndpoint.GET("/region", regionplate.GetRegionCode)
+		plateCodeEndpoint.GET("/register", registerplate.GetRegisterCode)
+		plateCodeEndpoint.GET("/register/:regionCode", registerplate.GetRegisterCodeByRegionCode)
 
-		plateCode.Use(middleware.Auth())
-		plateCode.POST("/region", controllers.CreateRegionCode)
-		plateCode.POST("/register/:regionCode", controllers.CreateRegisterCode)
+		plateCodeEndpoint.Use(middleware.Auth())
+		plateCodeEndpoint.POST("/region", regionplate.CreateRegionCode)
+		plateCodeEndpoint.POST("/register/:regionCode", registerplate.CreateRegisterCode)
 	}
 
-	checkData := api.Group("/check-data")
+	checkDataEndpoint := apiEndpoint.Group("/check-data")
 	{
-		checkData.POST("/", checkplate.CheckPlateData)
+		checkDataEndpoint.POST("/", checkplate.CheckPlateData)
 	}
 
 	return r
