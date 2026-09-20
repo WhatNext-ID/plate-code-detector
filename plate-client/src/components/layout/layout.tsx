@@ -1,5 +1,9 @@
-import { Outlet, useMatches } from 'react-router';
+import React from 'react';
+
+import { Link, Outlet, useMatches } from 'react-router';
+
 import { AppSidebar } from '@/components/app-sidebar';
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,13 +12,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+
 import { Separator } from '@/components/ui/separator';
+
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import React from 'react';
+
 import { RouteHandle } from '../../routes/routes';
 
 type RouteMatch = ReturnType<typeof useMatches>[number] & {
@@ -29,6 +35,7 @@ export default function Page() {
     .map((match) => ({
       label: match.handle!.breadcrumb!,
       pathname: match.pathname,
+      to: match.handle!.breadcrumbTo,
     }));
 
   return (
@@ -36,7 +43,18 @@ export default function Page() {
       <AppSidebar />
 
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header
+          className="
+            flex
+            h-16
+            shrink-0
+            items-center
+            gap-2
+            transition-[width,height]
+            ease-linear
+            group-has-data-[collapsible=icon]/sidebar-wrapper:h-12
+          "
+        >
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
 
@@ -62,8 +80,10 @@ export default function Page() {
                         {isLast ? (
                           <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
                         ) : (
-                          <BreadcrumbLink href={breadcrumb.pathname}>
-                            {breadcrumb.label}
+                          <BreadcrumbLink asChild>
+                            <Link to={breadcrumb.to ?? breadcrumb.pathname}>
+                              {breadcrumb.label}
+                            </Link>
                           </BreadcrumbLink>
                         )}
                       </BreadcrumbItem>

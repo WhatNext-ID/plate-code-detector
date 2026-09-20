@@ -1,43 +1,59 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 
 import App from '@/App';
-import Landing from '@/pages/LandingPages';
-import Ikhtisar from '@/pages/IkhtisarPages';
 import Region from '@/pages/region/RegionPages';
+import Ikhtisar from '@/pages/IkhtisarPages';
+import Landing from '@/pages/LandingPages';
 
 export type RouteHandle = {
   breadcrumb?: string;
+  breadcrumbTo?: string;
 };
 
 export const router = createBrowserRouter([
   {
     path: '/PlateFrom',
-    Component: App,
-    handle: {
-      breadcrumb: 'Deteksi Plat Nomor',
-    },
+
     children: [
+      // Landing - no sidebar
       {
         index: true,
         Component: () => <Navigate to="landing" replace />,
       },
+
       {
         path: 'landing',
         Component: Landing,
       },
+
+      // Application layout
       {
-        path: 'ikhtisar',
-        Component: Ikhtisar,
+        Component: App,
+
         handle: {
-          breadcrumb: 'Ikhtisar',
+          breadcrumb: 'Deteksi Plat Nomor',
+          breadcrumbTo: '/PlateFrom/landing',
         },
-      },
-      {
-        path: 'region',
-        Component: Region,
-        handle: {
-          breadcrumb: 'Region',
-        },
+
+        children: [
+          {
+            path: 'ikhtisar',
+            Component: Ikhtisar,
+
+            handle: {
+              breadcrumb: 'Ikhtisar',
+            },
+          },
+
+          {
+            path: 'region',
+            Component: Region,
+
+            handle: {
+              breadcrumb: 'Region',
+            },
+          },
+        ],
       },
     ],
   },
