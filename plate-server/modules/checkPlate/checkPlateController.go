@@ -28,3 +28,5 @@ func CheckPlateData(ctx *gin.Context) {
 		"data": checkDetailData,
 	})
 }
+
+func CheckMultiplePlateData(ctx *gin.Context) {}
