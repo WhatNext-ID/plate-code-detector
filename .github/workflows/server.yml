@@ -2,7 +2,11 @@ name: PlatCode Backend With Go
 
 on:
   push:
-    branches: ['main']
+    branches:
+      - main
+    paths:
+      - 'plate-server/**'
+      - 'server.yaml'
 
 jobs:
   deploy:
