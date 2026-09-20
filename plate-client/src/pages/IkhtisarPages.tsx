@@ -1,4 +1,4 @@
-export default function Dashboard() {
+export default function Ikhtisar() {
   return (
     <div>
       <p>Ikhtisar</p>
