@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'plate-server/**'
-      - 'server.yaml'
+      - 'server.yml'
 
 jobs:
   deploy:
